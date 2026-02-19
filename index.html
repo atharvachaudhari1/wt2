@@ -51,6 +51,12 @@
           </svg>
           <span class="nav-label">Progress</span>
         </a>
+        <a href="#" class="nav-item" data-page="chat" aria-label="Chat">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span class="nav-label">Chat</span>
+        </a>
         <a href="#" class="nav-item" data-page="settings" aria-label="Settings">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"/>
@@ -229,6 +235,37 @@
           <h1 class="page-title">My progress</h1>
           <div class="progress-content" id="progress-content">
             <p class="text-muted">Loading...</p>
+          </div>
+        </div>
+
+        <!-- Panel: Chat -->
+        <div class="content-panel" id="panel-chat" data-page="chat">
+          <h1 class="page-title">Chat</h1>
+          <div class="chat-layout">
+            <aside class="chat-sidebar">
+              <div class="chat-new-wrap">
+                <button type="button" class="btn-continue chat-new-btn" id="chat-new-btn">New chat</button>
+                <div class="chat-contacts-dropdown" id="chat-contacts-dropdown" style="display: none;">
+                  <ul class="chat-contacts-list" id="chat-contacts-list"></ul>
+                </div>
+              </div>
+              <div class="chat-conversations-list" id="chat-conversations-list">
+                <p class="text-muted chat-placeholder">Loading conversations...</p>
+              </div>
+            </aside>
+            <section class="chat-main">
+              <div class="chat-empty" id="chat-empty">
+                <p>Select a conversation or start a new chat.</p>
+              </div>
+              <div class="chat-thread" id="chat-thread" style="display: none;">
+                <div class="chat-thread-header" id="chat-thread-header"></div>
+                <div class="chat-messages" id="chat-messages"></div>
+                <form class="chat-send-form" id="chat-send-form">
+                  <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." maxlength="2000" autocomplete="off">
+                  <button type="submit" class="btn-continue chat-send-btn">Send</button>
+                </form>
+              </div>
+            </section>
           </div>
         </div>
 

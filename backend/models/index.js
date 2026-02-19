@@ -11,4 +11,6 @@ module.exports = {
   Announcement: require('./Announcement'),
   Feedback: require('./Feedback'),
   Notification: require('./Notification'),
+  Conversation: require('./Conversation'),
+  Message: require('./Message'),
 };

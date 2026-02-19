@@ -507,6 +507,154 @@ img {
   min-width: 200px;
 }
 
+/* Chat panel */
+.chat-layout {
+  display: flex;
+  gap: var(--space-4);
+  min-height: 420px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #fafafa;
+}
+.chat-sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: #fff;
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+}
+.chat-new-wrap { position: relative; padding: var(--space-4); padding-bottom: 0; flex-shrink: 0; }
+.chat-new-btn { width: 100%; margin: 0; }
+.chat-contacts-dropdown {
+  position: absolute;
+  top: 100%;
+  left: var(--space-4);
+  right: var(--space-4);
+  margin-top: var(--space-2);
+  background: #fff;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 20;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.chat-sidebar { position: relative; }
+.chat-contacts-list { list-style: none; }
+.chat-contacts-list li {
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 0.9375rem;
+}
+.chat-contacts-list li.chat-contact-header {
+  cursor: default;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: #f1f5f9;
+  padding: var(--space-2) var(--space-4);
+}
+.chat-contacts-list li.chat-contact-header:hover { background: #f1f5f9; }
+.chat-contacts-list li:hover:not(.chat-contact-header) { background: rgba(0,0,0,0.04); }
+.chat-contacts-list li strong { display: block; }
+.chat-contacts-list li span { color: var(--text-muted); font-size: 0.8125rem; }
+.chat-conversations-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+.chat-placeholder { padding: var(--space-4); font-size: 0.875rem; }
+.chat-conv-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: var(--space-1);
+  border: 1px solid transparent;
+}
+.chat-conv-item:hover { background: rgba(0,0,0,0.04); }
+.chat-conv-item.active { background: var(--active-bg); border-color: var(--active); }
+.chat-conv-item .conv-name { font-weight: 600; font-size: 0.9375rem; }
+.chat-conv-item .conv-preview { color: var(--text-muted); font-size: 0.8125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #fff;
+}
+.chat-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  padding: var(--space-8);
+}
+.chat-thread {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.chat-thread-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--glass-border);
+  font-weight: 600;
+  font-size: 1rem;
+  background: #f8fafc;
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 200px;
+}
+.chat-msg {
+  max-width: 75%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.chat-msg.sent {
+  align-self: flex-end;
+  background: var(--pill-active-bg);
+  color: #fff;
+}
+.chat-msg.received {
+  align-self: flex-start;
+  background: #e2e8f0;
+  color: var(--text);
+}
+.chat-msg .msg-meta { font-size: 0.75rem; opacity: 0.85; margin-top: 0.25rem; }
+.chat-send-form {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-top: 1px solid var(--glass-border);
+  background: #f8fafc;
+}
+.chat-input {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 0.9375rem;
+}
+.chat-send-btn { flex-shrink: 0; }
+
 /* Admin: Assign students modal */
 .modal--wide { max-width: 520px; }
 .assign-students-list { max-height: 50vh; overflow-y: auto; }

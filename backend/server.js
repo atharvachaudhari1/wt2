@@ -12,7 +12,8 @@ const { runSeed } = require('./scripts/seed');
 
 const app = express();
 
-app.use(cors({ origin: config.CORS_ORIGIN, credentials: true }));
+// Development: allow any origin; auth uses Bearer token in header (no cookies)
+app.use(cors({ origin: true, credentials: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

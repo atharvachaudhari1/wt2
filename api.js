@@ -2,7 +2,13 @@
  * ECS Mentoring Portal - API client (vanilla JS).
  */
 (function (global) {
-  var API_BASE = 'http://localhost:3000/api';
+  function getApiBase() {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return window.location.protocol + '//' + window.location.hostname + ':3000/api';
+    }
+    return 'http://localhost:3000/api';
+  }
+  var API_BASE = getApiBase();
   var TOKEN_KEY = 'ecs_token';
   var USER_KEY = 'ecs_user';
 
@@ -42,7 +48,8 @@
   }
 
   function request(method, path, body) {
-    var url = path.indexOf('http') === 0 ? path : API_BASE + path;
+    var base = getApiBase();
+    var url = path.indexOf('http') === 0 ? path : base + path;
     var isLoginRequest = (method === 'POST' && path === '/auth/login');
     var options = { method: method, headers: getAuthHeaders() };
     if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
@@ -68,6 +75,11 @@
         }
         return data;
       });
+    }).catch(function (err) {
+      if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+        return Promise.reject(new Error('Cannot reach server. Start the backend (port 3000) and open this page from http://' + (typeof window !== 'undefined' && window.location ? window.location.hostname : 'localhost') + ':5500'));
+      }
+      return Promise.reject(err);
     });
   }
 
@@ -132,6 +144,22 @@
       assignMentor: function (studentId, mentorId) {
         return request('POST', '/admin/assign-mentor', { studentId: studentId, mentorId: mentorId });
       }
+    },
+    chat: {
+      contacts: function () { return request('GET', '/chat/contacts'); },
+      conversations: function () { return request('GET', '/chat/conversations'); },
+      getOrCreateConversation: function (otherUserId) { return request('POST', '/chat/conversations', { otherUserId: otherUserId }); },
+      getConversation: function (conversationId, query) {
+        var q = query || {};
+        var params = new URLSearchParams();
+        if (q.limit) params.set('limit', q.limit);
+        if (q.before) params.set('before', q.before);
+        var path = '/chat/conversations/' + conversationId;
+        if (params.toString()) path += '?' + params.toString();
+        return request('GET', path);
+      },
+      sendMessage: function (conversationId, content) { return request('POST', '/chat/conversations/' + conversationId + '/messages', { content: content }); },
+      markMessageRead: function (messageId) { return request('PATCH', '/chat/messages/' + messageId + '/read'); }
     }
   };
 })(typeof window !== 'undefined' ? window : this);

@@ -12,5 +12,6 @@ router.use('/admin', require('./adminRoutes'));
 router.use('/feedback', require('./feedbackRoutes'));
 router.use('/timeline', require('./timelineRoutes'));
 router.use('/notifications', require('./notificationRoutes'));
+router.use('/chat', require('./chatRoutes'));
 
 module.exports = router;

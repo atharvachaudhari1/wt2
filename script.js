@@ -50,6 +50,7 @@
     if (pageId === 'sessions') loadSessionsPanel();
     if (pageId === 'mentors') loadMentorsPanel();
     if (pageId === 'progress') loadProgressPanel();
+    if (pageId === 'chat') loadChatPanel();
     if (pageId === 'admin-mentors') loadAdminMentorsPanel();
     if (pageId === 'settings') initSettingsPanel();
   }
@@ -270,6 +271,223 @@
       .catch(function () {
         el.innerHTML = '<p class="text-muted">No attendance data or could not load.</p>';
       });
+  }
+
+  // ----- Chat panel -----
+  var chatConversationsList = document.getElementById('chat-conversations-list');
+  var chatContactsDropdown = document.getElementById('chat-contacts-dropdown');
+  var chatContactsList = document.getElementById('chat-contacts-list');
+  var chatNewBtn = document.getElementById('chat-new-btn');
+  var chatEmpty = document.getElementById('chat-empty');
+  var chatThread = document.getElementById('chat-thread');
+  var chatThreadHeader = document.getElementById('chat-thread-header');
+  var chatMessages = document.getElementById('chat-messages');
+  var chatSendForm = document.getElementById('chat-send-form');
+  var chatInput = document.getElementById('chat-input');
+  var currentChatConversationId = null;
+  var chatContacts = [];
+  var chatConversations = [];
+
+  function loadChatPanel() {
+    if (typeof ECS_API === 'undefined') return;
+    if (chatConversationsList) chatConversationsList.innerHTML = '<p class="text-muted chat-placeholder">Loading...</p>';
+    Promise.all([ECS_API.chat.contacts(), ECS_API.chat.conversations()])
+      .then(function (results) {
+        chatContacts = (results[0].contacts || []);
+        chatConversations = (results[1].conversations || []);
+        renderChatConversationsList();
+        if (chatContactsDropdown) chatContactsDropdown.style.display = 'none';
+      })
+      .catch(function () {
+        if (chatConversationsList) chatConversationsList.innerHTML = '<p class="text-muted chat-placeholder">Could not load. Check you are logged in.</p>';
+      });
+  }
+
+  function renderChatConversationsList() {
+    if (!chatConversationsList) return;
+    if (!chatConversations.length) {
+      chatConversationsList.innerHTML = '<p class="text-muted chat-placeholder">No conversations yet. Click &quot;New chat&quot; to start.</p>';
+      return;
+    }
+    chatConversationsList.innerHTML = chatConversations.map(function (c) {
+      var id = (c._id && c._id.toString()) || '';
+      var name = (c.other && c.other.name) ? c.other.name.replace(/</g, '&lt;') : 'Unknown';
+      var preview = (c.lastMessage && c.lastMessage.content) ? c.lastMessage.content.replace(/</g, '&lt;') : '';
+      var active = currentChatConversationId === id ? ' active' : '';
+      return '<div class="chat-conv-item' + active + '" data-conv-id="' + id.replace(/"/g, '&quot;') + '"><div><span class="conv-name">' + name + '</span><span class="conv-preview">' + preview + '</span></div></div>';
+    }).join('');
+    chatConversationsList.querySelectorAll('.chat-conv-item').forEach(function (el) {
+      el.addEventListener('click', function () {
+        openChatConversation(el.getAttribute('data-conv-id'));
+      });
+    });
+  }
+
+  function openChatConversation(convId) {
+    if (!convId || typeof ECS_API === 'undefined') return;
+    currentChatConversationId = convId;
+    renderChatConversationsList();
+    if (chatEmpty) chatEmpty.style.display = 'none';
+    if (chatThread) chatThread.style.display = 'flex';
+    var conv = chatConversations.find(function (c) { return (c._id && c._id.toString()) === convId; });
+    if (chatThreadHeader && conv && conv.other) chatThreadHeader.textContent = conv.other.name + (conv.other.role ? ' (' + conv.other.role + ')' : '');
+    if (chatMessages) chatMessages.innerHTML = '<p class="text-muted">Loading messages...</p>';
+    ECS_API.chat.getConversation(convId)
+      .then(function (data) {
+        if (chatMessages) {
+          var msgs = data.messages || [];
+          if (!msgs.length) {
+            chatMessages.innerHTML = '<p class="text-muted">No messages yet. Say hello!</p>';
+          } else {
+            chatMessages.innerHTML = msgs.map(function (m) {
+              var isSent = (m.sender && m.sender._id && m.sender._id.toString()) === (user && user._id && user._id.toString());
+              var cls = isSent ? 'chat-msg sent' : 'chat-msg received';
+              var name = (m.sender && m.sender.name) ? m.sender.name.replace(/</g, '&lt;') : '';
+              var content = (m.content || '').replace(/</g, '&lt;').replace(/\n/g, '<br>');
+              var time = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
+              return '<div class="' + cls + '"><div>' + content + '</div><span class="msg-meta">' + name + ' · ' + time + '</span></div>';
+            }).join('');
+          }
+        }
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      })
+      .catch(function () {
+        if (chatMessages) chatMessages.innerHTML = '<p class="text-muted">Could not load messages.</p>';
+      });
+  }
+
+  function startNewChatWith(otherUserId) {
+    if (!otherUserId || typeof ECS_API === 'undefined') return;
+    if (chatContactsDropdown) chatContactsDropdown.style.display = 'none';
+    if (chatEmpty) chatEmpty.style.display = 'none';
+    if (chatThread) chatThread.style.display = 'flex';
+    if (chatMessages) chatMessages.innerHTML = '<p class="text-muted">Starting chat...</p>';
+    if (chatThreadHeader) chatThreadHeader.textContent = 'New chat';
+    ECS_API.chat.getOrCreateConversation(otherUserId)
+      .then(function (data) {
+        var conv = data.conversation;
+        if (!conv || !conv._id) return;
+        var id = conv._id.toString();
+        if (!chatConversations.some(function (c) { return (c._id && c._id.toString()) === id; })) {
+          chatConversations.unshift({ _id: conv._id, other: conv.other, lastMessage: null, lastMessageAt: null });
+        }
+        openChatConversation(id);
+      })
+      .catch(function (err) {
+        if (chatMessages) chatMessages.innerHTML = '<p class="text-muted">' + (err.message || 'Could not start chat.') + '</p>';
+        if (chatThreadHeader) chatThreadHeader.textContent = 'New chat';
+      });
+  }
+
+  if (chatNewBtn) {
+    chatNewBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (chatContactsDropdown && chatContactsDropdown.style.display === 'block') {
+        chatContactsDropdown.style.display = 'none';
+        return;
+      }
+      if (typeof ECS_API === 'undefined') return;
+      if (chatContactsList) chatContactsList.innerHTML = '<li class="text-muted">Loading contacts...</li>';
+      if (chatContactsDropdown) chatContactsDropdown.style.display = 'block';
+      ECS_API.chat.contacts()
+        .then(function (data) {
+          chatContacts = data.contacts || [];
+          showChatContactsDropdown();
+        })
+        .catch(function () {
+          if (chatContactsList) chatContactsList.innerHTML = '<li class="text-muted">Could not load contacts.</li>';
+        });
+    });
+  }
+  function showChatContactsDropdown() {
+    if (!chatContactsDropdown || !chatContactsList) return;
+    if (!chatContacts.length) {
+      chatContactsList.innerHTML = '<li class="text-muted">No contacts to chat with.</li>';
+    } else {
+      var order = { student: 0, parent: 1, teacher: 2, admin: 3 };
+      var sorted = chatContacts.slice().sort(function (a, b) {
+        var ra = order[a.role] !== undefined ? order[a.role] : 4;
+        var rb = order[b.role] !== undefined ? order[b.role] : 4;
+        return ra !== rb ? ra - rb : ((a.name || '').localeCompare(b.name || ''));
+      });
+      var html = '';
+      if (user && user.role === 'teacher') {
+        var byRole = { student: [], parent: [], admin: [] };
+        sorted.forEach(function (c) {
+          if (c.role === 'student') byRole.student.push(c);
+          else if (c.role === 'parent') byRole.parent.push(c);
+          else if (c.role === 'admin') byRole.admin.push(c);
+        });
+        if (byRole.student.length) {
+          html += '<li class="chat-contact-header">Students</li>';
+          byRole.student.forEach(function (c) { html += contactItemHtml(c); });
+        }
+        if (byRole.parent.length) {
+          html += '<li class="chat-contact-header">Parents</li>';
+          byRole.parent.forEach(function (c) { html += contactItemHtml(c); });
+        }
+        if (byRole.admin.length) {
+          html += '<li class="chat-contact-header">Admin</li>';
+          byRole.admin.forEach(function (c) { html += contactItemHtml(c); });
+        }
+      } else {
+        sorted.forEach(function (c) { html += contactItemHtml(c); });
+      }
+      chatContactsList.innerHTML = html || '<li class="text-muted">No contacts.</li>';
+      chatContactsList.querySelectorAll('li[data-user-id]').forEach(function (li) {
+        li.addEventListener('click', function (e) {
+          e.stopPropagation();
+          startNewChatWith(li.getAttribute('data-user-id'));
+        });
+      });
+    }
+    chatContactsDropdown.style.display = 'block';
+  }
+  function contactItemHtml(c) {
+    var id = (c._id && c._id.toString()) || '';
+    var name = (c.name || '').replace(/</g, '&lt;');
+    var role = (c.role || '').replace(/</g, '&lt;');
+    return '<li data-user-id="' + id.replace(/"/g, '&quot;') + '"><strong>' + name + '</strong><span> ' + role + '</span></li>';
+  }
+  document.addEventListener('click', function () {
+    if (chatContactsDropdown && chatContactsDropdown.style.display === 'block') {
+      chatContactsDropdown.style.display = 'none';
+    }
+  });
+  if (chatContactsDropdown) {
+    chatContactsDropdown.addEventListener('click', function (e) { e.stopPropagation(); });
+  }
+
+  if (chatSendForm && chatInput) {
+    chatSendForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var content = chatInput.value.trim();
+      if (!content || !currentChatConversationId || typeof ECS_API === 'undefined') return;
+      chatInput.value = '';
+      ECS_API.chat.sendMessage(currentChatConversationId, content)
+        .then(function (data) {
+          if (data.message && chatMessages) {
+            var m = data.message;
+            var isSent = true;
+            var cls = 'chat-msg sent';
+            var name = (user && user.name) ? user.name.replace(/</g, '&lt;') : '';
+            var text = (m.content || '').replace(/</g, '&lt;').replace(/\n/g, '<br>');
+            var time = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
+            var wrap = document.createElement('div');
+            wrap.className = cls;
+            wrap.innerHTML = '<div>' + text + '</div><span class="msg-meta">' + name + ' · ' + time + '</span>';
+            chatMessages.appendChild(wrap);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }
+          var conv = chatConversations.find(function (c) { return (c._id && c._id.toString()) === currentChatConversationId; });
+          if (conv) {
+            conv.lastMessage = { content: content, createdAt: new Date() };
+            conv.lastMessageAt = new Date();
+            renderChatConversationsList();
+          }
+        })
+        .catch(function () {});
+    });
   }
 
   var assignStudentsModal = document.getElementById('assign-students-modal');
