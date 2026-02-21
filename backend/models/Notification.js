@@ -21,7 +21,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['session_reminder', 'announcement', 'attendance', 'note', 'general'],
+      enum: ['session_reminder', 'announcement', 'attendance', 'note', 'chat', 'general'],
       default: 'general',
     },
     read: {
@@ -39,7 +39,7 @@ const notificationSchema = new mongoose.Schema(
     },
     relatedModel: {
       type: String,
-      enum: ['Session', 'Announcement', 'Attendance', null],
+      enum: ['Session', 'Announcement', 'Attendance', 'Message', null],
       default: null,
     },
   },

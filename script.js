@@ -105,20 +105,78 @@
   }
 
   function initSettingsPanel() {
+    if (!user) return;
+    var displayNameEl = document.getElementById('settings-display-name');
+    var emailEl = document.getElementById('settings-email');
+    var roleEl = document.getElementById('settings-role');
     var pref = document.getElementById('profile-picture-pref');
-    if (!pref || !user) return;
-    pref.value = user.gender === 'female' ? 'female' : 'male';
-    pref.onchange = function () {
-      var gender = pref.value;
-      if (typeof ECS_API === 'undefined') return;
-      ECS_API.auth.updateMe({ gender: gender }).then(function (data) {
-        if (data.user) {
-          ECS_API.setAuth(ECS_API.getToken(), data.user);
-          user = data.user;
-          updateProfilePictureFromUser(user);
+    if (displayNameEl) displayNameEl.value = user.name || '';
+    if (emailEl) emailEl.textContent = user.email || '—';
+    if (roleEl) roleEl.textContent = (user.role || '—').charAt(0).toUpperCase() + (user.role || '').slice(1);
+    if (pref) pref.value = user.gender === 'female' ? 'female' : 'male';
+
+    var saveProfileBtn = document.getElementById('settings-save-profile');
+    if (saveProfileBtn && typeof ECS_API !== 'undefined') {
+      saveProfileBtn.onclick = function () {
+        var name = (displayNameEl && displayNameEl.value) ? displayNameEl.value.trim() : '';
+        if (!name) {
+          if (displayNameEl) displayNameEl.focus();
+          return;
         }
-      }).catch(function () {});
-    };
+        var gender = pref ? pref.value : 'male';
+        ECS_API.auth.updateMe({ name: name, gender: gender }).then(function (data) {
+          if (data.user) {
+            ECS_API.setAuth(ECS_API.getToken(), data.user);
+            user = data.user;
+            updateProfilePictureFromUser(user);
+            saveProfileBtn.textContent = 'Saved';
+            setTimeout(function () { saveProfileBtn.textContent = 'Save profile'; }, 2000);
+          }
+        }).catch(function (err) {
+          alert(err.message || 'Could not save profile.');
+        });
+      };
+    }
+
+    var currentPass = document.getElementById('settings-current-password');
+    var newPass = document.getElementById('settings-new-password');
+    var confirmPass = document.getElementById('settings-confirm-password');
+    var passwordMsg = document.getElementById('settings-password-message');
+    var changePassBtn = document.getElementById('settings-change-password');
+    if (changePassBtn && currentPass && newPass && confirmPass && passwordMsg && typeof ECS_API !== 'undefined') {
+      changePassBtn.onclick = function () {
+        passwordMsg.textContent = '';
+        passwordMsg.className = 'settings-message';
+        var cur = (currentPass.value || '').trim();
+        var neu = (newPass.value || '').trim();
+        var conf = (confirmPass.value || '').trim();
+        if (!cur || !neu) {
+          passwordMsg.textContent = 'Please enter current and new password.';
+          passwordMsg.className = 'settings-message settings-message--error';
+          return;
+        }
+        if (neu.length < 5) {
+          passwordMsg.textContent = 'New password must be at least 5 characters.';
+          passwordMsg.className = 'settings-message settings-message--error';
+          return;
+        }
+        if (neu !== conf) {
+          passwordMsg.textContent = 'New password and confirm do not match.';
+          passwordMsg.className = 'settings-message settings-message--error';
+          return;
+        }
+        ECS_API.auth.updateMe({ currentPassword: cur, newPassword: neu }).then(function () {
+          currentPass.value = '';
+          newPass.value = '';
+          confirmPass.value = '';
+          passwordMsg.textContent = 'Password changed successfully.';
+          passwordMsg.className = 'settings-message settings-message--success';
+        }).catch(function (err) {
+          passwordMsg.textContent = err.message || 'Could not change password.';
+          passwordMsg.className = 'settings-message settings-message--error';
+        });
+      };
+    }
   }
   function setActive(el) {
     var page = el ? el.getAttribute('data-page') : 'mentoring';
@@ -1009,45 +1067,90 @@
     });
   }
 
-  // ----- Notifications: panel with list and mark all read -----
+  // ----- Notifications: panel with list and mark all read (works for all roles) -----
   var notifyBtn = document.getElementById('btn-notify');
   var notifyDot = document.getElementById('notify-dot');
   var notifyPanel = document.getElementById('notify-panel');
   var notifyList = document.getElementById('notify-panel-list');
   var notifyMarkRead = document.getElementById('notify-mark-read');
+
+  function getNotifications() {
+    if (typeof ECS_API === 'undefined') return Promise.reject(new Error('No API'));
+    return ECS_API.notifications.list().then(function (data) {
+      return data.notifications || [];
+    });
+  }
+
   function refreshNotifyDot() {
-    if (typeof ECS_API === 'undefined' || !notifyDot) return;
-    ECS_API.student.notifications().then(function (data) {
-      var unread = (data.notifications || []).filter(function (n) { return !n.read; });
+    if (!notifyDot) return;
+    getNotifications().then(function (list) {
+      var unread = list.filter(function (n) { return !n.read; });
       notifyDot.style.visibility = unread.length > 0 ? 'visible' : 'hidden';
     }).catch(function () {});
   }
+
+  function formatNotifyTime(dateStr) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr);
+    var now = new Date();
+    var diff = (now - d) / 60000;
+    if (diff < 1) return 'Just now';
+    if (diff < 60) return Math.floor(diff) + 'm ago';
+    if (diff < 1440) return Math.floor(diff / 60) + 'h ago';
+    if (diff < 10080) return Math.floor(diff / 1440) + 'd ago';
+    return d.toLocaleDateString();
+  }
+
   function loadNotifyPanel() {
-    if (!notifyList || typeof ECS_API === 'undefined') return;
-    ECS_API.student.notifications().then(function (data) {
-      var list = data.notifications || [];
+    if (!notifyList) return;
+    notifyList.innerHTML = '<div class="notify-item text-muted">Loading…</div>';
+    getNotifications().then(function (list) {
       if (!list.length) {
-        notifyList.innerHTML = '<div class="notify-item text-muted">No notifications</div>';
+        notifyList.innerHTML = '<div class="notify-item text-muted">No notifications yet.</div>';
         return;
       }
       notifyList.innerHTML = list.map(function (n) {
         var cls = n.read ? 'notify-item' : 'notify-item unread';
-        var msg = (n.message || n.title || 'Notification').replace(/</g, '&lt;');
+        var title = (n.title || 'Notification').replace(/</g, '&lt;');
+        var body = (n.body || '').replace(/</g, '&lt;');
+        var time = formatNotifyTime(n.createdAt);
         var id = n._id ? n._id.toString() : '';
-        return '<div class="' + cls + '" data-id="' + id.replace(/"/g, '&quot;') + '">' + msg + '</div>';
+        var bodyHtml = body ? '<span class="notify-item-body">' + body + '</span>' : '';
+        return '<div class="' + cls + '" data-id="' + id.replace(/"/g, '&quot;') + '" role="button" tabindex="0">' +
+          '<span class="notify-item-title">' + title + '</span>' + bodyHtml +
+          '<span class="notify-item-time">' + time + '</span></div>';
       }).join('');
+
+      notifyList.querySelectorAll('.notify-item[data-id]').forEach(function (el) {
+        var id = el.getAttribute('data-id');
+        if (!id) return;
+        el.addEventListener('click', function () {
+          if (ECS_API && !el.classList.contains('read')) {
+            ECS_API.notifications.markRead(id).then(function () {
+              el.classList.remove('unread');
+              el.classList.add('read');
+              refreshNotifyDot();
+            }).catch(function () {});
+          }
+        });
+      });
     }).catch(function () {
-      notifyList.innerHTML = '<div class="notify-item text-muted">Could not load</div>';
+      notifyList.innerHTML = '<div class="notify-item text-muted">Could not load notifications.</div>';
     });
   }
+
   if (notifyBtn && notifyPanel) {
     notifyBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       var open = notifyPanel.classList.toggle('is-open');
       notifyPanel.setAttribute('aria-hidden', !open);
-      if (open) loadNotifyPanel();
+      if (open) {
+        loadNotifyPanel();
+        refreshNotifyDot();
+      }
     });
   }
+
   if (notifyMarkRead && typeof ECS_API !== 'undefined') {
     notifyMarkRead.addEventListener('click', function () {
       ECS_API.notifications.markAllRead().then(function () {
@@ -1056,12 +1159,14 @@
       }).catch(function () {});
     });
   }
+
   document.addEventListener('click', function (e) {
     if (notifyPanel && notifyPanel.classList.contains('is-open') && !notifyPanel.contains(e.target) && !notifyBtn.contains(e.target)) {
       notifyPanel.classList.remove('is-open');
       notifyPanel.setAttribute('aria-hidden', 'true');
     }
   });
+
   refreshNotifyDot();
 
 })();

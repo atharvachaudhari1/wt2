@@ -2,6 +2,16 @@
  * Session controller - CRUD for mentoring sessions; Meet link; live status.
  */
 const { Session, StudentProfile, TeacherProfile } = require('../models');
+const { createBulkForUserIds } = require('../utils/notificationHelper');
+
+/**
+ * Get user IDs for student profile IDs.
+ */
+async function getUserIdsFromStudentProfiles(profileIds) {
+  if (!profileIds || profileIds.length === 0) return [];
+  const profiles = await StudentProfile.find({ _id: { $in: profileIds } }).select('user').lean();
+  return profiles.map((p) => p.user).filter(Boolean);
+}
 
 /**
  * Create session (teacher only). Assigns students; can set meetLink later.
@@ -26,6 +36,17 @@ exports.createSession = async (req, res, next) => {
       meetLink: meetLink || null,
       createdBy: req.user.id,
     });
+    const userIds = await getUserIdsFromStudentProfiles(session.students);
+    if (userIds.length > 0) {
+      const at = new Date(scheduledAt).toLocaleString();
+      await createBulkForUserIds(userIds, {
+        title: 'New session: ' + title,
+        body: 'Scheduled at ' + at,
+        type: 'session_reminder',
+        relatedId: session._id,
+        relatedModel: 'Session',
+      });
+    }
     const populated = await Session.findById(session._id)
       .populate('teacher', 'user department designation')
       .populate('students', 'user rollNo department');
@@ -92,6 +113,16 @@ exports.updateMeetLink = async (req, res, next) => {
     session.meetLink = meetLink.trim();
     session.isLive = true;
     await session.save();
+    const userIds = await getUserIdsFromStudentProfiles(session.students);
+    if (userIds.length > 0) {
+      await createBulkForUserIds(userIds, {
+        title: 'Meet link added: ' + session.title,
+        body: meetLink,
+        type: 'session_reminder',
+        relatedId: session._id,
+        relatedModel: 'Session',
+      });
+    }
     const populated = await Session.findById(session._id)
       .populate('teacher', 'user department designation')
       .populate('students', 'user rollNo department');

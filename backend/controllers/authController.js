@@ -68,29 +68,57 @@ exports.me = async (req, res, next) => {
 };
 
 /**
- * PATCH /api/auth/me - update current user (e.g. gender for avatar)
- * Body: { gender?: 'male' | 'female' }
+ * PATCH /api/auth/me - update current user
+ * Body: { name?, gender?, currentPassword?, newPassword? }
+ * For password change: both currentPassword and newPassword required; newPassword min 5 chars.
  */
 exports.updateMe = async (req, res, next) => {
   try {
-    const { gender } = req.body;
+    const { name, gender, currentPassword, newPassword } = req.body;
     const update = {};
+
+    if (name !== undefined) {
+      const trimmed = typeof name === 'string' ? name.trim() : '';
+      if (trimmed.length > 0) update.name = trimmed;
+    }
     if (gender !== undefined) {
       if (gender === null || gender === 'male' || gender === 'female') {
         update.gender = gender;
       }
     }
-    if (Object.keys(update).length === 0) {
-      return res.status(400).json({ success: false, message: 'No valid fields to update.' });
+
+    if (currentPassword != null || newPassword != null) {
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ success: false, message: 'Current password and new password required to change password.' });
+      }
+      if (String(newPassword).length < 5) {
+        return res.status(400).json({ success: false, message: 'New password must be at least 5 characters.' });
+      }
+      const userWithPass = await User.findById(req.user.id).select('+password');
+      if (!userWithPass) return res.status(404).json({ success: false, message: 'User not found.' });
+      const match = await userWithPass.comparePassword(currentPassword);
+      if (!match) {
+        return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+      }
+      userWithPass.password = newPassword;
+      await userWithPass.save();
+      const user = await User.findById(req.user.id).select('-password');
+      return res.json({ success: true, user });
     }
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { $set: update },
-      { new: true }
-    ).select('-password');
-    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
-    res.json({ success: true, user });
+
+    if (Object.keys(update).length > 0) {
+      const updated = await User.findByIdAndUpdate(
+        req.user.id,
+        { $set: update },
+        { new: true }
+      ).select('-password');
+      if (!updated) return res.status(404).json({ success: false, message: 'User not found.' });
+      return res.json({ success: true, user: updated });
+    }
+
+    return res.status(400).json({ success: false, message: 'No valid fields to update.' });
   } catch (err) {
     next(err);
   }
 };
+

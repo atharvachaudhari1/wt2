@@ -3,6 +3,7 @@
  */
 const mongoose = require('mongoose');
 const { User, Conversation, Message, StudentProfile, TeacherProfile, ParentProfile } = require('../models');
+const { createNotification } = require('../utils/notificationHelper');
 
 function normalizeParticipants(uid1, uid2) {
   const a = uid1.toString();
@@ -200,6 +201,21 @@ exports.sendMessage = async (req, res, next) => {
       content,
     });
     await Conversation.updateOne({ _id: conv._id }, { lastMessageAt: new Date() });
+
+    const recipientId = conv.participants.find((id) => id.toString() !== req.user._id.toString());
+    if (recipientId) {
+      const senderName = req.user.name || 'Someone';
+      const body = content.length > 80 ? content.slice(0, 80) + '…' : content;
+      await createNotification({
+        userId: recipientId,
+        title: 'New message from ' + senderName,
+        body,
+        type: 'chat',
+        relatedId: msg._id,
+        relatedModel: 'Message',
+      });
+    }
+
     const populated = await Message.findById(msg._id).populate('sender', 'name role');
     res.status(201).json({ success: true, message: populated });
   } catch (err) {

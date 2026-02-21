@@ -569,9 +569,15 @@ img {
   font-size: 0.875rem;
   line-height: var(--line-height-body);
   transition: background var(--duration-fast) var(--ease-out);
+  cursor: pointer;
 }
+.notify-item[data-id]:hover { background: rgba(0,0,0,0.03); }
 .notify-item.unread { background: rgba(234, 88, 12, 0.06); }
+.notify-item.unread:hover { background: rgba(234, 88, 12, 0.09); }
 .notify-item:last-child { border-bottom: none; }
+.notify-item-title { display: block; font-weight: 600; color: var(--text); margin-bottom: var(--space-1); }
+.notify-item-body { display: block; color: var(--text-muted); font-size: 0.8125rem; margin-bottom: var(--space-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.notify-item-time { display: block; font-size: 0.75rem; color: var(--text-muted); }
 
 /* Content panels (sidebar pages) */
 .content-panel {
@@ -698,7 +704,41 @@ img {
 }
 
 /* Settings panel */
+.settings-content { max-width: 480px; }
+.settings-section {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--glass-border);
+}
+.settings-section--last { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.settings-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.02em;
+}
+.settings-field { margin-bottom: var(--space-4); }
+.settings-field:last-of-type { margin-bottom: var(--space-4); }
 .settings-label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--text); margin-bottom: 0.35rem; }
+.settings-input {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 0.9375rem;
+  transition: border-color var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out);
+}
+.settings-input:focus {
+  outline: none;
+  border-color: rgba(30, 64, 175, 0.4);
+  box-shadow: var(--shadow-focus);
+}
+.settings-readonly { font-size: 0.9375rem; margin: 0; }
+.settings-hint { font-size: 0.8125rem; margin-top: 0.25rem; margin-bottom: 0; }
 .settings-select {
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--glass-border);
@@ -713,6 +753,10 @@ img {
   border-color: rgba(30, 64, 175, 0.4);
   box-shadow: var(--shadow-focus);
 }
+.settings-message { font-size: 0.875rem; margin: var(--space-2) 0 var(--space-3); min-height: 1.25rem; }
+.settings-message--success { color: var(--success, #15803d); }
+.settings-message--error { color: var(--danger, #b91c1c); }
+.settings-content .btn-continue { margin-top: var(--space-2); }
 
 /* Chat panel */
 .chat-layout {

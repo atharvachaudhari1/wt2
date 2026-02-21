@@ -296,12 +296,58 @@
         <div class="content-panel" id="panel-settings" data-page="settings">
           <h1 class="page-title">Settings</h1>
           <div class="settings-content">
-            <label for="profile-picture-pref" class="settings-label">Profile picture</label>
-            <select id="profile-picture-pref" class="settings-select">
-              <option value="male">Male illustration</option>
-              <option value="female">Female illustration</option>
-            </select>
-            <p class="text-muted" style="margin-top: 1rem;">More options coming soon.</p>
+            <section class="settings-section">
+              <h2 class="settings-section-title">Profile</h2>
+              <div class="settings-field">
+                <label for="settings-display-name" class="settings-label">Display name</label>
+                <input type="text" id="settings-display-name" class="settings-input" placeholder="Your name" maxlength="100" autocomplete="name">
+                <p class="settings-hint text-muted">This name is shown in the app and in chat.</p>
+              </div>
+              <div class="settings-field">
+                <label class="settings-label">Email</label>
+                <p id="settings-email" class="settings-readonly text-muted">—</p>
+              </div>
+              <div class="settings-field">
+                <label class="settings-label">Role</label>
+                <p id="settings-role" class="settings-readonly text-muted">—</p>
+              </div>
+              <div class="settings-field">
+                <label for="profile-picture-pref" class="settings-label">Profile picture</label>
+                <select id="profile-picture-pref" class="settings-select">
+                  <option value="male">Male illustration</option>
+                  <option value="female">Female illustration</option>
+                </select>
+              </div>
+              <button type="button" class="btn-continue btn-continue--lime" id="settings-save-profile">Save profile</button>
+            </section>
+
+            <section class="settings-section">
+              <h2 class="settings-section-title">Account</h2>
+              <div class="settings-field">
+                <label for="settings-current-password" class="settings-label">Current password</label>
+                <input type="password" id="settings-current-password" class="settings-input" placeholder="Enter current password" autocomplete="current-password">
+              </div>
+              <div class="settings-field">
+                <label for="settings-new-password" class="settings-label">New password</label>
+                <input type="password" id="settings-new-password" class="settings-input" placeholder="At least 5 characters" autocomplete="new-password" minlength="5">
+              </div>
+              <div class="settings-field">
+                <label for="settings-confirm-password" class="settings-label">Confirm new password</label>
+                <input type="password" id="settings-confirm-password" class="settings-input" placeholder="Confirm new password" autocomplete="new-password">
+              </div>
+              <p id="settings-password-message" class="settings-message" aria-live="polite"></p>
+              <button type="button" class="btn-continue btn-continue--lime" id="settings-change-password">Change password</button>
+            </section>
+
+            <section class="settings-section">
+              <h2 class="settings-section-title">Notifications</h2>
+              <p class="text-muted">In-app notifications appear in the bell icon in the top bar. Open the panel to see new messages, announcements, session reminders, and chat alerts. Use &quot;Mark all read&quot; to clear the list.</p>
+            </section>
+
+            <section class="settings-section settings-section--last">
+              <h2 class="settings-section-title">About</h2>
+              <p class="text-muted">ECS Mentoring Portal — Connect with your mentor, view sessions, and stay updated.</p>
+            </section>
           </div>
         </div>
 

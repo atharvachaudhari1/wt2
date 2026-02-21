@@ -2,6 +2,27 @@
  * Announcement controller - create and fetch announcements.
  */
 const { Announcement, User, StudentProfile, TeacherProfile, ParentProfile } = require('../models');
+const { createBulkForUserIds } = require('../utils/notificationHelper');
+
+/**
+ * Resolve target audience to user IDs for notifications.
+ */
+async function getTargetUserIds({ targetType, targetDepartment, targetStudentIds }) {
+  if (targetStudentIds && targetStudentIds.length > 0) {
+    const profiles = await StudentProfile.find({ _id: { $in: targetStudentIds } }).select('user').lean();
+    return profiles.map((p) => p.user).filter(Boolean);
+  }
+  if (targetType === 'department' && targetDepartment) {
+    const profiles = await StudentProfile.find({ department: targetDepartment }).select('user').lean();
+    return profiles.map((p) => p.user).filter(Boolean);
+  }
+  if (targetType === 'all' || targetType === 'students') {
+    const query = targetDepartment ? { department: targetDepartment } : {};
+    const profiles = await StudentProfile.find(query).select('user').lean();
+    return profiles.map((p) => p.user).filter(Boolean);
+  }
+  return [];
+}
 
 /**
  * Create announcement (teacher or admin). Body: title, body, targetType?, targetDepartment?, targetStudentIds?
@@ -21,6 +42,20 @@ exports.createAnnouncement = async (req, res, next) => {
       targetStudentIds: targetStudentIds || [],
       isPinned: !!isPinned,
     });
+    const userIds = await getTargetUserIds({
+      targetType,
+      targetDepartment: targetDepartment || null,
+      targetStudentIds: targetStudentIds || [],
+    });
+    if (userIds.length > 0) {
+      await createBulkForUserIds(userIds, {
+        title: 'New announcement: ' + title,
+        body: body.length > 120 ? body.slice(0, 120) + '…' : body,
+        type: 'announcement',
+        relatedId: announcement._id,
+        relatedModel: 'Announcement',
+      });
+    }
     const populated = await Announcement.findById(announcement._id).populate('author', 'name email');
     res.status(201).json({ success: true, announcement: populated });
   } catch (err) {
