@@ -403,7 +403,9 @@
   var chatNewBtn = document.getElementById('chat-new-btn');
   var chatEmpty = document.getElementById('chat-empty');
   var chatThread = document.getElementById('chat-thread');
-  var chatThreadHeader = document.getElementById('chat-thread-header');
+  var chatThreadTitle = document.getElementById('chat-thread-title');
+  var chatBackBtn = document.getElementById('chat-back-btn');
+  var chatLayout = document.getElementById('chat-layout');
   var chatMessages = document.getElementById('chat-messages');
   var chatSendForm = document.getElementById('chat-send-form');
   var chatInput = document.getElementById('chat-input');
@@ -453,7 +455,8 @@
     if (chatEmpty) chatEmpty.style.display = 'none';
     if (chatThread) chatThread.style.display = 'flex';
     var conv = chatConversations.find(function (c) { return (c._id && c._id.toString()) === convId; });
-    if (chatThreadHeader && conv && conv.other) chatThreadHeader.textContent = conv.other.name + (conv.other.role ? ' (' + conv.other.role + ')' : '');
+    if (chatThreadTitle && conv && conv.other) chatThreadTitle.textContent = conv.other.name + (conv.other.role ? ' (' + conv.other.role + ')' : '');
+    if (chatLayout && window.innerWidth <= 768) chatLayout.classList.add('chat-mobile-thread-open');
     if (chatMessages) chatMessages.innerHTML = '<p class="text-muted">Loading messages...</p>';
     ECS_API.chat.getConversation(convId)
       .then(function (data) {
@@ -485,7 +488,7 @@
     if (chatEmpty) chatEmpty.style.display = 'none';
     if (chatThread) chatThread.style.display = 'flex';
     if (chatMessages) chatMessages.innerHTML = '<p class="text-muted">Starting chat...</p>';
-    if (chatThreadHeader) chatThreadHeader.textContent = 'New chat';
+    if (chatThreadTitle) chatThreadTitle.textContent = 'New chat';
     ECS_API.chat.getOrCreateConversation(otherUserId)
       .then(function (data) {
         var conv = data.conversation;
@@ -498,9 +501,19 @@
       })
       .catch(function (err) {
         if (chatMessages) chatMessages.innerHTML = '<p class="text-muted">' + (err.message || 'Could not start chat.') + '</p>';
-        if (chatThreadHeader) chatThreadHeader.textContent = 'New chat';
+        if (chatThreadTitle) chatThreadTitle.textContent = 'New chat';
       });
   }
+
+  function closeChatConversation() {
+    currentChatConversationId = null;
+    if (chatEmpty) chatEmpty.style.display = 'flex';
+    if (chatThread) chatThread.style.display = 'none';
+    if (chatLayout) chatLayout.classList.remove('chat-mobile-thread-open');
+    renderChatConversationsList();
+  }
+
+  if (chatBackBtn) chatBackBtn.addEventListener('click', closeChatConversation);
 
   if (chatNewBtn) {
     chatNewBtn.addEventListener('click', function (e) {

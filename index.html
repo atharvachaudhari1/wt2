@@ -261,7 +261,7 @@
         <!-- Panel: Chat -->
         <div class="content-panel" id="panel-chat" data-page="chat">
           <h1 class="page-title">Chat</h1>
-          <div class="chat-layout">
+          <div class="chat-layout" id="chat-layout">
             <aside class="chat-sidebar">
               <div class="chat-new-wrap">
                 <button type="button" class="btn-continue chat-new-btn" id="chat-new-btn">New chat</button>
@@ -278,7 +278,10 @@
                 <p>Select a conversation or start a new chat.</p>
               </div>
               <div class="chat-thread" id="chat-thread" style="display: none;">
-                <div class="chat-thread-header" id="chat-thread-header"></div>
+                <div class="chat-thread-header">
+                  <button type="button" class="chat-back-btn" id="chat-back-btn" aria-label="Back to conversations">←</button>
+                  <span class="chat-thread-title" id="chat-thread-title"></span>
+                </div>
                 <div class="chat-messages" id="chat-messages"></div>
                 <form class="chat-send-form" id="chat-send-form">
                   <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." maxlength="2000" autocomplete="off">

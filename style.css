@@ -723,11 +723,40 @@ img {
   min-height: 0;
 }
 .chat-thread-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-4);
   border-bottom: 1px solid var(--glass-border);
   font-weight: 600;
   font-size: 1rem;
   background: #f8fafc;
+}
+.chat-back-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.chat-back-btn:hover {
+  background: rgba(0,0,0,0.06);
+}
+.chat-thread-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .chat-messages {
   flex: 1;
@@ -772,6 +801,34 @@ img {
   font-size: 0.9375rem;
 }
 .chat-send-btn { flex-shrink: 0; }
+
+/* Chat: mobile responsive */
+@media (max-width: 768px) {
+  .chat-layout {
+    flex-direction: column;
+    min-height: 400px;
+  }
+  .chat-sidebar {
+    width: 100%;
+    min-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+    max-height: 50vh;
+  }
+  .chat-layout.chat-mobile-thread-open .chat-sidebar {
+    display: none;
+  }
+  .chat-layout.chat-mobile-thread-open .chat-main {
+    flex: 1;
+    min-height: 350px;
+  }
+  .chat-back-btn {
+    display: flex;
+  }
+  .chat-msg {
+    max-width: 88%;
+  }
+}
 
 /* Admin: Assign students modal */
 .modal--wide { max-width: 520px; }
