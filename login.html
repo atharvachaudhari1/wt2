@@ -63,17 +63,16 @@
         errorEl.textContent = '';
         const email = document.getElementById('email').value.trim().toLowerCase();
         const password = document.getElementById('password').value.trim();
-        const role = document.getElementById('role').value;
         try {
-          const data = await ECS_API.auth.login(email, password, role);
-          if (data.success && data.token) {
-            ECS_API.setAuth(data.token, data.user);
+          const data = await ECS_API.auth.login(email, password);
+          if (data.success) {
+            ECS_API.setAuth('session', { email: email, role: data.role, name: data.name, mentorEmail: data.mentorEmail || null });
             window.location.href = 'index.html';
           } else {
             errorEl.textContent = data.message || 'Login failed';
           }
         } catch (err) {
-          errorEl.textContent = err.message || 'Login failed. Check backend is running on port 3000.';
+          errorEl.textContent = err.message || 'Login failed. Check your connection and try again.';
         }
       });
     })();

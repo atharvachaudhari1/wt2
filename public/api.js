@@ -1,15 +1,14 @@
 /**
  * ECS Mentoring Portal - API client (vanilla JS).
+ * Backend: Cloudflare Worker + D1
  */
 (function (global) {
+  var BASE_URL = 'https://wt2.btsjungarmy2007.workers.dev';
   function getApiBase() {
     if (typeof window !== 'undefined' && window.ECS_API_BASE) {
       return window.ECS_API_BASE;
     }
-    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-      return window.location.protocol + '//' + window.location.hostname + ':3000/api';
-    }
-    return 'http://localhost:3000/api';
+    return BASE_URL + '/api';
   }
   var API_BASE = getApiBase();
   var TOKEN_KEY = 'ecs_token';
@@ -53,7 +52,7 @@
   function request(method, path, body) {
     var base = getApiBase();
     var url = path.indexOf('http') === 0 ? path : base + path;
-    var isLoginRequest = (method === 'POST' && path === '/auth/login');
+    var isLoginRequest = (method === 'POST' && path === '/login');
     var options = { method: method, headers: getAuthHeaders() };
     if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
       options.body = typeof body === 'string' ? body : JSON.stringify(body);
@@ -80,7 +79,7 @@
       });
     }).catch(function (err) {
       if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
-        return Promise.reject(new Error('Cannot reach server. Start the backend (port 3000) and open this page from http://' + (typeof window !== 'undefined' && window.location ? window.location.hostname : 'localhost') + ':5500'));
+        return Promise.reject(new Error('Cannot reach server. Check your connection and try again.'));
       }
       return Promise.reject(err);
     });
@@ -99,7 +98,7 @@
     patch: function (path, body) { return request('PATCH', path, body); },
     delete: function (path) { return request('DELETE', path); },
     auth: {
-      login: function (email, password, role) { return request('POST', '/auth/login', { email: email, password: password, role: role }); },
+      login: function (email, password) { return request('POST', '/login', { email: email, password: password }); },
       me: function () { return request('GET', '/auth/me'); },
       updateMe: function (body) { return request('PATCH', '/auth/me', body); }
     },

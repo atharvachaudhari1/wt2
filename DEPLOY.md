@@ -25,11 +25,11 @@ The project is set up for Vercel: `vercel.json` and a Vite build that outputs to
 
 ## 3. Set the API URL (required for the app to work)
 
-The dashboard and login call a **backend API**. On Vercel we only deploy the frontend, so the API must be hosted elsewhere (e.g. Railway, Render, or your own server).
+The dashboard and login call a **backend API**. On Vercel we only deploy the frontend; the API is hosted on Cloudflare Workers.
 
 In your **Vercel project**: **Settings** → **Environment Variables** → Add:
 
 - **Name:** `VITE_API_URL`
-- **Value:** your backend API base URL (e.g. `https://your-backend.railway.app/api`)
+- **Value:** your backend API base URL (e.g. `https://wt2.btsjungarmy2007.workers.dev/api`)
 
 Then **Redeploy** so the build uses it. Without this, the app tries `https://your-domain:3000/api` and all requests fail.

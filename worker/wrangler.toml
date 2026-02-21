@@ -1,0 +1,8 @@
+name = "wt2"
+main = "src/index.js"
+compatibility_date = "2026-02-21"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "arkaa-db"
+database_id = "e7310478-6cd6-412d-9e71-93cf39702a6e"
