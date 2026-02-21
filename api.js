@@ -107,7 +107,11 @@
       liveSessions: function () { return request('GET', '/student/live-sessions'); },
       sessionsUpcoming: function () { return request('GET', '/student/sessions/upcoming'); },
       meetLink: function (sessionId) { return request('GET', '/student/sessions/' + sessionId + '/meet-link'); },
-      mentor: function () { return request('GET', '/student/mentor'); },
+      mentor: function (email) {
+        var path = '/student/mentor';
+        if (email) path += '?email=' + encodeURIComponent(email);
+        return request('GET', path);
+      },
       attendance: function () { return request('GET', '/student/attendance'); },
       announcements: function () { return request('GET', '/student/announcements'); },
       notifications: function () { return request('GET', '/notifications'); }

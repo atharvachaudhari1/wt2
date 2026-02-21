@@ -369,7 +369,7 @@
   function loadMentorsPanel() {
     var card = document.getElementById('mentor-info-card');
     if (!card || typeof ECS_API === 'undefined' || !user || user.role !== 'student') return;
-    ECS_API.student.mentor()
+    ECS_API.student.mentor(user.email)
       .then(function (data) {
         var m = data.mentor;
         if (!m || !m.user) {
