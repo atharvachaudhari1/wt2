@@ -1,11 +1,14 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const routes = require('./routes');
+const connectDB = require('./config/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
 
 app.use(cors({ origin: true }));
 app.use(express.json());
@@ -22,16 +25,17 @@ app.use((err, req, res, next) => {
 });
 
 async function start() {
-  const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
-  if (!uri) {
-    console.error('Missing MONGO_URI or MONGODB_URI in environment');
-    process.exit(1);
-  }
-  await mongoose.connect(uri);
-  console.log('MongoDB connected');
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log('Server running at:');
+    console.log('  http://localhost:' + PORT + '/health');
+    console.log('  http://localhost:' + PORT + '/api/login');
   });
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('MongoDB connection failed:', err.message);
+    console.error('Fix MONGO_URI in .env and restart. /health will still work.');
+  }
 }
 
 start().catch((err) => {

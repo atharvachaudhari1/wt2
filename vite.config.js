@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Injects window.ECS_API_BASE so the app uses the Cloudflare Worker API (override with VITE_API_URL if needed).
+// Injects window.ECS_API_BASE for production. Set VITE_API_URL to your Render backend API base (e.g. https://your-app.onrender.com/api).
 function injectApiBase() {
-  const apiUrl = (process.env.VITE_API_URL || 'https://wt2.btsjungarmy2007.workers.dev/api').replace(/"/g, '\\"');
+  const apiUrl = (process.env.VITE_API_URL || 'http://localhost:3000/api').replace(/"/g, '\\"');
   return {
     name: 'inject-api-base',
     transformIndexHtml(html) {

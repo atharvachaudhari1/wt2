@@ -4,7 +4,9 @@
   "description": "Express + MongoDB backend for ECS Mentoring Portal",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed": "node scripts/seed.js",
+    "seed:circular": "node scripts/seedFromCircular.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

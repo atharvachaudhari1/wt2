@@ -1,14 +1,17 @@
 /**
  * ECS Mentoring Portal - API client (vanilla JS).
- * Backend: Cloudflare Worker + D1
+ * Backend: Express + MongoDB (localhost or Render)
  */
 (function (global) {
-  var BASE_URL = 'https://wt2.btsjungarmy2007.workers.dev';
   function getApiBase() {
     if (typeof window !== 'undefined' && window.ECS_API_BASE) {
       return window.ECS_API_BASE;
     }
-    return BASE_URL + '/api';
+    var host = typeof window !== 'undefined' && window.location ? window.location.hostname : '';
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:3000/api';
+    }
+    return (window.location ? window.location.protocol + '//' + host + ':3000/api' : 'http://localhost:3000/api');
   }
   var API_BASE = getApiBase();
   var TOKEN_KEY = 'ecs_token';

@@ -32,6 +32,52 @@ router.post('/login', async (req, res) => {
 });
 
 /**
+ * GET /api/auth/me - current user (stub: returns 200 if Authorization present)
+ */
+router.get('/auth/me', async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    if (!auth || !auth.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+    // No JWT yet; frontend stores user after login. Return minimal so UI doesn't 404.
+    return res.status(200).json({
+      user: {
+        email: '',
+        name: 'User',
+        role: 'student',
+        mentorEmail: null,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * PATCH /api/auth/me - update current user (stub)
+ */
+router.patch('/auth/me', async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    if (!auth || !auth.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+    const body = req.body || {};
+    return res.status(200).json({
+      user: {
+        email: body.email || '',
+        name: body.name || 'User',
+        role: body.role || 'student',
+        mentorEmail: body.mentorEmail || null,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/**
  * POST /api/register (optional)
  * Body: { name, email, password, role, rollNo?, mentorEmail? }
  */

@@ -1,0 +1,5 @@
+[
+  { "rollNo": "1", "name": "Student One", "mentorEmail": "mentor1@crce.edu.in" },
+  { "rollNo": "2", "name": "Student Two", "mentorEmail": "mentor1@crce.edu.in" },
+  { "rollNo": "3", "name": "Student Three", "mentorEmail": "mentor2@crce.edu.in" }
+]
